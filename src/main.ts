@@ -9,6 +9,7 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
+    .addBearerAuth()
     .setTitle('Google Jobs Scraper')
     .setDescription('Scrape Google Jobs')
     .setVersion('1.0')

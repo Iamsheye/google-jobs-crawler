@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  // binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isPremium Boolean  @default(false)
+
+  email          String @unique
+  hashedPassword String
+  name           String
+
+  jobAlerts JobAlerts[]
+
+  @@map("users")
+}
+
+model JobAlerts {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name         String
+  description  String?
+  search       String
+  includeWords String[]
+  omitWords    String[]
+
+  jobs Jobs[]
+
+  users   Users  @relation(fields: [usersId], references: [id])
+  usersId String
+
+  @@map("job_alerts")
+}
+
+model Jobs {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title String
+  link  String
+
+  JobAlerts   JobAlerts? @relation(fields: [jobAlertsId], references: [id])
+  jobAlertsId String?
+
+  @@map("jobs")
+}
