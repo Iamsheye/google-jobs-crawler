@@ -12,6 +12,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('signup')
+  @ResponseMessage('Signed up successfully')
   signup(@Body() dto: SignUpDto) {
     return this.authService.signup(dto);
   }

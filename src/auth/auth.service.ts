@@ -32,10 +32,7 @@ export class AuthService {
         },
       });
 
-      return {
-        statusCode: HttpStatus.CREATED,
-        message: 'Successfully created user',
-      };
+      return;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === 'P2002') {
@@ -55,7 +52,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ForbiddenException('Invalid credentials email');
+      throw new ForbiddenException('Invalid credentials');
     }
 
     const isPasswordValid = await argon.verify(
@@ -64,7 +61,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new ForbiddenException('Invalid credentials password');
+      throw new ForbiddenException('Invalid credentials');
     }
 
     const userData: CurrentUser = {
