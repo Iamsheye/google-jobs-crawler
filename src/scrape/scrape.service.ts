@@ -1,53 +1,53 @@
-import { Injectable } from '@nestjs/common';
-import { NestCrawlerService } from 'nest-crawler';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import { chromium } from 'playwright';
+import { format, sub } from 'date-fns';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CronTime } from 'cron';
 
-// Add cron to scrape jobs every day
-// 5 0 * * *
+type GetJobsArgs = {
+  search: string;
+  includeWords: string[];
+  omitWords: string[];
+  before: string;
+  after: string;
+};
 
 const transformQuery = (
   type: 'include' | 'omit',
-  query: string | string[],
+  query: string[],
 ): string | undefined => {
-  if (query === undefined) return undefined;
-
-  if (typeof query === 'string') {
-    return ' ' + (type === 'include' ? `"${query}"` : `-${query}`);
-  }
+  if (!query.length) return '';
   return (
     ' ' +
     query
-      ?.map((word) => {
-        if (type === 'include') {
-          return `"${word}"`;
-        }
-        return `-${word}`;
-      })
+      ?.map((word) => (type === 'include' ? `"${word}"` : `-${word}`))
       .join(' ')
   );
 };
 
 type Job = {
   title: string;
-  url: string;
-  description: string;
-  site: string;
+  link: string;
+  hostSite: string;
 };
 
 @Injectable()
 export class ScrapeService {
-  constructor(private readonly crawler: NestCrawlerService) {}
+  constructor(
+    private prisma: PrismaService,
+    private schedulerRegistry: SchedulerRegistry,
+  ) {}
+  private readonly logger = new Logger('ANALYTICS');
 
-  async getJobs(
-    search: string,
-    includeWords?: string | string[],
-    omitWords?: string | string[],
-    after?: string,
-  ) {
-    const query = `site:lever.co | site:greenhouse.io | site:jobs.ashbyhq.com | site:app.dover.io ${search}${
-      includeWords ? transformQuery('include', includeWords) : ''
-    }${omitWords ? transformQuery('omit', omitWords) : ''}${
-      after ? ` after:${after}` : ''
-    }`;
+  getPageUrl({ after, before, includeWords, omitWords, search }: GetJobsArgs) {
+    const query = `site:lever.co | site:greenhouse.io | site:jobs.ashbyhq.com | site:app.dover.io ${search}${transformQuery(
+      'include',
+      includeWords,
+    )}${transformQuery(
+      'omit',
+      omitWords,
+    )}${` after:${after}`}${` before:${before}`}`;
 
     const googleUrl =
       `https://www.google.com/search?` +
@@ -55,41 +55,87 @@ export class ScrapeService {
         q: query,
       }).toString();
 
-    console.log({ googleUrl });
+    return googleUrl;
+  }
 
-    const jobs: Job = await this.crawler.fetch({
-      target: googleUrl,
-      waitFor: 1 * 1000,
-      fetch: {
-        title: {
-          listItem: 'h3.LC20lb.MBeuO.DKV0Md',
-        },
-        url: {
-          listItem: '.MjjYud a',
-          data: {
-            url: {
-              attr: 'href',
+  // @Cron(CronExpression.EVERY_5_SECONDS)
+  // log() {
+  //   this.logger.verbose(
+  //     this.schedulerRegistry.getCronJob('Job Alerts').nextDates(5),
+  //   );
+  // }
+
+  @Cron(new Date(Date.now() + 3000), {
+    name: 'Job Alerts',
+    timeZone: 'Africa/Lagos',
+  })
+  async handleCronJobAlerts() {
+    const browser = await chromium.launch({ headless: true });
+
+    const date = new Date();
+    const before = format(date, 'yyyy-MM-dd');
+    const after = format(sub(date, { days: 1 }), 'yyyy-MM-dd');
+
+    const jobAlerts = await this.prisma.jobAlerts.findMany();
+    let jobsAdded = 0;
+
+    for (const alert of jobAlerts) {
+      const url = this.getPageUrl({
+        search: alert.search,
+        includeWords: alert.includeWords,
+        omitWords: alert.omitWords,
+        before,
+        after,
+      });
+
+      const page = await browser.newPage();
+      await page.goto(url, { waitUntil: 'load' });
+
+      const titles = await page.$$eval('h3.LC20lb.MBeuO.DKV0Md', (nodes) =>
+        nodes.map((n) => n.textContent),
+      );
+      const hostSites = await page.$$eval('a span.VuuXrf', (nodes) =>
+        nodes.map((n) => n.textContent),
+      );
+      const links = await page.$$eval('.MjjYud a', (nodes) =>
+        nodes.map((n) => n.getAttribute('href')),
+      );
+
+      const jobs: Job[] = titles.map((title, i) => ({
+        title,
+        link: links[i],
+        hostSite: hostSites[i],
+      }));
+
+      jobsAdded += jobs.length;
+      await page.close();
+
+      await this.prisma.$transaction(
+        jobs.map((job) => {
+          return this.prisma.jobs.create({
+            data: {
+              title: job.title,
+              link: job.link,
+              hostSite: job.hostSite,
+              jobAlert: {
+                connect: {
+                  id: alert.id,
+                },
+              },
             },
-          },
-          convert: (link) => link.url,
-        },
-        description: {
-          listItem: '.VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf span',
-          how: 'html',
-        },
-        site: {
-          listItem: 'a span.VuuXrf',
-        },
-      },
-    });
+          });
+        }),
+      );
+    }
+    this.schedulerRegistry
+      .getCronJob('Job Alerts')
+      .setTime(new CronTime(CronExpression.EVERY_DAY_AT_1AM));
 
-    const jobsArray = Array.from({ length: jobs.title.length }, (_, i) => ({
-      title: jobs.title[i],
-      url: jobs.url[i],
-      description: jobs.description[i],
-      site: jobs.site[i],
-    }));
-
-    return jobsArray;
+    this.logger.verbose(
+      `TIME TO SCRAPE: ${new Date().getTime() - date.getTime()}ms`,
+    );
+    this.logger.verbose(
+      `JOBS ADDED: ${jobsAdded}, Before: ${before}, After: ${after}`,
+    );
   }
 }
