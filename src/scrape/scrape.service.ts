@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-chromium';
 import { format, sub } from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CronTime } from 'cron';
