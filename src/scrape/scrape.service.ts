@@ -70,7 +70,7 @@ export class ScrapeService {
     timeZone: 'Africa/Lagos',
   })
   async handleCronJobAlerts() {
-    const browser = await chromium.launch({ args: ['--no-sandbox'] });
+    const browser = await chromium.launch({ chromiumSandbox: false });
 
     const date = new Date();
     const before = format(date, 'yyyy-MM-dd');
