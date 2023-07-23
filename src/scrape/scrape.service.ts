@@ -65,7 +65,7 @@ export class ScrapeService {
   //   );
   // }
 
-  @Cron(new Date(Date.now() + 3000), {
+  @Cron(new Date(Date.now() + 7500), {
     name: 'Job Alerts',
     timeZone: 'Africa/Lagos',
   })
