@@ -17,9 +17,11 @@ model Users {
   updatedAt DateTime @updatedAt
   isPremium Boolean  @default(false)
 
-  email          String @unique
-  hashedPassword String
+  email          String  @unique
+  hashedPassword String?
+  googleId       String? @unique
   name           String
+  isLoginAllowed Boolean @default(true)
 
   jobAlerts JobAlerts[]
 

@@ -7,7 +7,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { CurrentUser } from 'src/types/user';
 import { UsersService } from './users.service';
@@ -48,6 +48,7 @@ export class UsersController {
     return this.userService.updatePassword(id, updatePwdDto);
   }
 
+  @ApiExcludeEndpoint()
   @Patch('premium')
   @ResponseMessage(resMessage('PATCH', 'premium status'))
   updatePremiumStatus(
