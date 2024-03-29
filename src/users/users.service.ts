@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import * as argon from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -32,27 +34,52 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const isPasswordValid = await argon.verify(
-      user.hashedPassword,
-      updatePwdDto.oldPassword,
-    );
+    if (user.hashedPassword) {
+      if (!updatePwdDto.oldPassword) {
+        throw new BadRequestException('Old password is required');
+      }
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid old password');
+      if (updatePwdDto.oldPassword === updatePwdDto.newPassword) {
+        throw new UnprocessableEntityException(
+          'Old and new password cannot be the same',
+        );
+      }
+
+      const isPasswordValid = await argon.verify(
+        user.hashedPassword,
+        updatePwdDto.oldPassword,
+      );
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid old password');
+      }
+
+      const hashedPassword = await argon.hash(updatePwdDto.newPassword);
+
+      const newUser = await this.prisma.users.update({
+        where: {
+          id,
+        },
+        data: {
+          hashedPassword,
+        },
+      });
+
+      return;
+    } else {
+      const hashedPassword = await argon.hash(updatePwdDto.newPassword);
+
+      const newUser = await this.prisma.users.update({
+        where: {
+          id,
+        },
+        data: {
+          hashedPassword,
+        },
+      });
+
+      return;
     }
-
-    const hashedPassword = await argon.hash(updatePwdDto.newPassword);
-
-    const newUser = await this.prisma.users.update({
-      where: {
-        id,
-      },
-      data: {
-        hashedPassword,
-      },
-    });
-
-    return;
   }
 
   async updatePremium(id: string, updatePremiumDto: UpdatePremiumDto) {

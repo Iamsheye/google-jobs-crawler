@@ -86,7 +86,7 @@ export class JobAlertService {
     });
 
     if (!jobAlert || jobAlert.userId !== userId) {
-      throw new ForbiddenException(
+      throw new NotFoundException(
         `Unable to access job alert with id ${userId}`,
       );
     }
@@ -112,7 +112,7 @@ export class JobAlertService {
     });
 
     if (!jobAlert || jobAlert.userId !== userId) {
-      throw new ForbiddenException(`Unable to access job alert with id ${id}`);
+      throw new NotFoundException(`Unable to access job alert with id ${id}`);
     }
 
     await this.prisma.jobAlerts.delete({

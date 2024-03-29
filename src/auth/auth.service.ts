@@ -61,6 +61,12 @@ export class AuthService {
       throw new ForbiddenException('Invalid credentials');
     }
 
+    if (!user.hashedPassword && user.googleId) {
+      throw new ForbiddenException(
+        'This account was created with Google, please use Google sign-in and set a password.',
+      );
+    }
+
     const isPasswordValid = await argon.verify(
       user.hashedPassword,
       dto.password,

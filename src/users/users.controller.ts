@@ -30,14 +30,14 @@ export class UsersController {
     return user;
   }
 
-  @Patch('me')
-  @ResponseMessage(resMessage('PATCH', 'user'))
-  updateMyProfile(
-    @GetUser('id') id: string,
-    @Body() updateUserDto: EditUserDto,
-  ) {
-    return this.userService.updateMyProfile(id, updateUserDto);
-  }
+  // @Patch('me')
+  // @ResponseMessage(resMessage('PATCH', 'user'))
+  // updateMyProfile(
+  //   @GetUser('id') id: string,
+  //   @Body() updateUserDto: EditUserDto,
+  // ) {
+  //   return this.userService.updateMyProfile(id, updateUserDto);
+  // }
 
   @Patch('password')
   @ResponseMessage(resMessage('PATCH', 'password'))
