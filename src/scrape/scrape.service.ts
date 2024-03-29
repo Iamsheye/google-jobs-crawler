@@ -3,7 +3,6 @@ import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
 import { chromium } from 'playwright-chromium';
 import { format, sub } from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CronTime } from 'cron';
 
 type GetJobsArgs = {
   search: string;
@@ -65,7 +64,7 @@ export class ScrapeService {
   //   );
   // }
 
-  @Cron(new Date(Date.now() + 7500), {
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, {
     name: 'Job Alerts',
     timeZone: 'Africa/Lagos',
   })
@@ -127,9 +126,9 @@ export class ScrapeService {
         }),
       );
     }
-    this.schedulerRegistry
-      .getCronJob('Job Alerts')
-      .setTime(new CronTime(CronExpression.EVERY_DAY_AT_1AM));
+    // this.schedulerRegistry
+    //   .getCronJob('Job Alerts')
+    //   .setTime(new CronTime(CronExpression.EVERY_DAY_AT_1AM));
 
     this.logger.verbose(
       `TIME TO SCRAPE: ${new Date().getTime() - date.getTime()}ms`,
