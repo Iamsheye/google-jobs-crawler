@@ -64,7 +64,7 @@ export class ScrapeService {
   //   );
   // }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM, {
+  @Cron(CronExpression.EVERY_DAY_AT_2AM, {
     name: 'Job Alerts',
     timeZone: 'Africa/Lagos',
   })
@@ -128,7 +128,7 @@ export class ScrapeService {
     }
     // this.schedulerRegistry
     //   .getCronJob('Job Alerts')
-    //   .setTime(new CronTime(CronExpression.EVERY_DAY_AT_1AM));
+    //   .setTime(new CronTime(CronExpression.EVERY_DAY_AT_2AM));
 
     this.logger.verbose(
       `TIME TO SCRAPE: ${new Date().getTime() - date.getTime()}ms`,
