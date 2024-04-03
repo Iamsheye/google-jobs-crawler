@@ -40,7 +40,7 @@ export class ScrapeService {
   private readonly logger = new Logger('ANALYTICS');
 
   getPageUrl({ after, before, includeWords, omitWords, search }: GetJobsArgs) {
-    const query = `site:lever.co | site:greenhouse.io | site:jobs.ashbyhq.com | site:app.dover.io ${search}${transformQuery(
+    const query = `site:workable.com | site:breezy.hr | site:recruitee.com | site:jobvite.com | site:jobs.smartrecruiters.com | site:icims.com | site:pinpointhq.com | site:lever.co | site:greenhouse.io | site:jobs.ashbyhq.com | site:app.dover.io ${search}${transformQuery(
       'include',
       includeWords,
     )}${transformQuery(
