@@ -56,7 +56,7 @@ export class UsersService {
 
       const hashedPassword = await argon.hash(updatePwdDto.newPassword);
 
-      const newUser = await this.prisma.users.update({
+      await this.prisma.users.update({
         where: {
           id,
         },
@@ -69,7 +69,7 @@ export class UsersService {
     } else {
       const hashedPassword = await argon.hash(updatePwdDto.newPassword);
 
-      const newUser = await this.prisma.users.update({
+      await this.prisma.users.update({
         where: {
           id,
         },

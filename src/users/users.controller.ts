@@ -14,7 +14,7 @@ import { UsersService } from './users.service';
 import { ResponseMessage } from 'src/app.decorator';
 import { resMessage } from 'src/app.constants';
 import { TransformationInterceptor } from 'src/app.interceptor';
-import { EditUserDto, UpdatePremiumDto, UpdatePwdDto } from './dto';
+import { UpdatePremiumDto, UpdatePwdDto } from './dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
