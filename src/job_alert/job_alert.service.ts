@@ -8,6 +8,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CurrentUser } from 'src/types/user';
 import { CreateJobAlertDto, EditJobAlertDto } from './dto';
 
+type GetJobsArgs = {
+  alertId: string;
+  page: number;
+  perPage: number;
+};
+
 @Injectable()
 export class JobAlertService {
   constructor(private prisma: PrismaService) {}
@@ -17,8 +23,16 @@ export class JobAlertService {
       where: {
         userId,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
-        jobs: true,
+        jobs: {
+          take: 3,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     });
 
@@ -27,11 +41,10 @@ export class JobAlertService {
 
   async createJobAlert(user: CurrentUser, dto: CreateJobAlertDto) {
     try {
-      const { _count: jobAlertsCount } = await this.prisma.jobAlerts.aggregate({
+      const jobAlertsCount = await this.prisma.jobAlerts.count({
         where: {
           userId: user.id,
         },
-        _count: true,
       });
 
       if (jobAlertsCount >= 3) {
@@ -67,14 +80,48 @@ export class JobAlertService {
     }
   }
 
-  async getJobs(userId: string, alertId: string) {
-    const jobs = await this.prisma.jobs.findMany({
+  async getJobs({ alertId, page, perPage }: GetJobsArgs) {
+    // get total number of jobs
+    const totalJobs = await this.prisma.jobs.count({
       where: {
         jobAlertId: alertId,
       },
     });
 
-    return jobs;
+    console.log(totalJobs);
+
+    if (totalJobs === 0) {
+      return {
+        jobs: [],
+        metadata: {
+          page,
+          perPage,
+          total: totalJobs,
+          totalPages: 1,
+        },
+      };
+    }
+
+    const jobs = await this.prisma.jobs.findMany({
+      where: {
+        jobAlertId: alertId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: perPage,
+      skip: (page - 1) * perPage,
+    });
+
+    return {
+      jobs,
+      metadata: {
+        page,
+        perPage,
+        total: totalJobs,
+        totalPages: Math.ceil(totalJobs / perPage),
+      },
+    };
   }
 
   async updateJobAlert(userId: string, alertId: string, dto: EditJobAlertDto) {

@@ -4,8 +4,10 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -41,8 +43,12 @@ export class JobAlertController {
 
   @Get(':id/jobs')
   @ResponseMessage(resMessage('GET', 'jobs'))
-  getJobs(@GetUser('id') userId: string, @Param('id') alertId: string) {
-    return this.jobAlertService.getJobs(userId, alertId);
+  getJobs(
+    @Param('id') alertId: string,
+    @Query('page', ParseIntPipe) page: number,
+    @Query('perPage', ParseIntPipe) perPage: number,
+  ) {
+    return this.jobAlertService.getJobs({ alertId, page, perPage });
   }
 
   @Patch(':id')
