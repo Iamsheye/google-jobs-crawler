@@ -1,7 +1,7 @@
 import { Body, Controller, Post, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { GoogleDto, SignInDto, SignUpDto } from './dto';
+import { GoogleDto, RefreshTokenDto, SignInDto, SignUpDto } from './dto';
 import { ResponseMessage } from 'src/app.decorator';
 import { TransformationInterceptor } from 'src/app.interceptor';
 
@@ -21,6 +21,12 @@ export class AuthController {
   @ResponseMessage('Logged in successfully')
   signin(@Body() dto: SignInDto) {
     return this.authService.signin(dto);
+  }
+
+  @Post('refresh-token')
+  @ResponseMessage('Token refreshed successfully')
+  refreshToken(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshToken(dto.refreshToken);
   }
 
   @Post('google')

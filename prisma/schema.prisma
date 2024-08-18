@@ -23,9 +23,22 @@ model Users {
   name           String
   isLoginAllowed Boolean @default(true)
 
-  jobAlerts JobAlerts[]
+  jobAlerts    JobAlerts[]
+  RefreshToken RefreshToken[]
 
   @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  isValid   Boolean  @default(true)
+  userId    String
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }
 
 model JobAlerts {

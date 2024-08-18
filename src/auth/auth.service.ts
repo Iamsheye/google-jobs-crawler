@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
 import { JwtService } from '@nestjs/jwt';
 import { CurrentUser } from 'src/types/user';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 const oAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -89,14 +90,19 @@ export class AuthService {
       isPremium: user.isPremium,
     };
 
+    const token = await this.signToken({
+      email: user.email,
+      name: user.name,
+      isPremium: user.isPremium,
+      sub: user.id,
+    });
+
+    const refreshToken = await this.generateRefreshToken(user.id);
+
     return {
       ...userData,
-      token: await this.signToken({
-        email: user.email,
-        name: user.name,
-        isPremium: user.isPremium,
-        sub: user.id,
-      }),
+      token,
+      refreshToken,
     };
   }
 
@@ -155,21 +161,103 @@ export class AuthService {
       );
     }
 
+    const token = await this.signToken({
+      email: user.email,
+      name: user.name,
+      isPremium: user.isPremium,
+      sub: user.id,
+    });
+
+    const refreshToken = await this.generateRefreshToken(user.id);
+
     return {
       ...userData,
-      token: await this.signToken({
-        email: user.email,
-        name: user.name,
-        isPremium: user.isPremium,
-        sub: user.id,
-      }),
+      token,
+      refreshToken,
     };
   }
 
   signToken(user: Omit<CurrentUser, 'id'> & { sub: string }) {
     return this.jwt.signAsync(user, {
       secret: this.config.get('JWT_SECRET'),
-      expiresIn: '7d',
+      expiresIn: '2h',
+    });
+  }
+
+  async refreshToken(token: string) {
+    const refreshToken = await this.prisma.refreshToken.findUnique({
+      where: { token },
+    });
+
+    if (
+      !refreshToken ||
+      !refreshToken.isValid ||
+      refreshToken.expiresAt < new Date()
+    ) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+
+    // Token Rotation: Invalidate the old refresh token
+    await this.prisma.refreshToken.update({
+      where: { token },
+      data: { isValid: false },
+    });
+
+    const payload = this.jwt.verify(token, {
+      secret: this.config.get('JWT_REFRESH_SECRET'),
+    });
+
+    // Retrieve user information using the userId (sub)
+    const user = await this.prisma.users.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    const newAccessToken = await this.signToken({
+      email: user.email,
+      name: user.name,
+      isPremium: user.isPremium,
+      sub: user.id,
+    });
+
+    const newRefreshToken = await this.generateRefreshToken(user.id);
+
+    return {
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  async generateRefreshToken(userId: string): Promise<string> {
+    const refreshToken = await this.jwt.signAsync(
+      { sub: userId },
+      {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+        expiresIn: '7d',
+      },
+    );
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      },
+    });
+
+    return refreshToken;
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async cleanupExpiredTokens() {
+    await this.prisma.refreshToken.deleteMany({
+      where: {
+        expiresAt: { lt: new Date() },
+        isValid: false,
+      },
     });
   }
 }
