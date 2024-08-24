@@ -39,7 +39,10 @@ export class ScrapeService {
   ) {}
   private readonly logger = new Logger('ANALYTICS');
 
-  getPageUrl({ after, before, includeWords, omitWords, search }: GetJobsArgs) {
+  getPageUrl(
+    { after, before, includeWords, omitWords, search }: GetJobsArgs,
+    start: number,
+  ) {
     const query = `site:workable.com | site:breezy.hr | site:recruitee.com | site:jobvite.com | site:jobs.smartrecruiters.com | site:icims.com | site:pinpointhq.com | site:lever.co | site:greenhouse.io | site:jobs.ashbyhq.com | site:app.dover.io ${search}${transformQuery(
       'include',
       includeWords,
@@ -52,17 +55,11 @@ export class ScrapeService {
       `https://www.google.com/search?` +
       new URLSearchParams({
         q: query,
+        start: start.toString(),
       }).toString();
 
     return googleUrl;
   }
-
-  // @Cron(CronExpression.EVERY_5_SECONDS)
-  // log() {
-  //   this.logger.verbose(
-  //     this.schedulerRegistry.getCronJob('Job Alerts').nextDates(5),
-  //   );
-  // }
 
   @Cron(CronExpression.EVERY_DAY_AT_2AM, {
     name: 'Job Alerts',
@@ -79,56 +76,65 @@ export class ScrapeService {
     let jobsAdded = 0;
 
     for (const alert of jobAlerts) {
-      const url = this.getPageUrl({
-        search: alert.search,
-        includeWords: alert.includeWords,
-        omitWords: alert.omitWords,
-        before,
-        after,
-      });
+      let start = 0;
+      let hasMoreResults = true;
 
-      const page = await browser.newPage();
-      await page.goto(url, { waitUntil: 'load' });
+      while (hasMoreResults) {
+        const url = this.getPageUrl(
+          {
+            search: alert.search,
+            includeWords: alert.includeWords,
+            omitWords: alert.omitWords,
+            before,
+            after,
+          },
+          start,
+        );
 
-      const titles = await page.$$eval('h3.LC20lb.MBeuO.DKV0Md', (nodes) =>
-        nodes.map((n) => n.textContent),
-      );
-      const hostSites = await page.$$eval('a span.VuuXrf', (nodes) =>
-        nodes.map((n) => n.textContent),
-      );
-      const links = await page.$$eval('.MjjYud a', (nodes) =>
-        nodes.map((n) => n.getAttribute('href')),
-      );
+        const page = await browser.newPage();
+        await page.goto(url, { waitUntil: 'load' });
 
-      const jobs: Job[] = titles.map((title, i) => ({
-        title,
-        link: links[i],
-        hostSite: hostSites[i],
-      }));
+        const titles = await page.$$eval('h3.LC20lb.MBeuO.DKV0Md', (nodes) =>
+          nodes.map((n) => n.textContent),
+        );
+        const hostSites = await page.$$eval('a span.VuuXrf', (nodes) =>
+          nodes.map((n) => n.textContent),
+        );
+        const links = await page.$$eval('.MjjYud a', (nodes) =>
+          nodes.map((n) => n.getAttribute('href')),
+        );
 
-      jobsAdded += jobs.length;
-      await page.close();
+        const jobs: Job[] = titles.map((title, i) => ({
+          title,
+          link: links[i],
+          hostSite: hostSites[i],
+        }));
 
-      await this.prisma.$transaction(
-        jobs.map((job) => {
-          return this.prisma.jobs.create({
-            data: {
-              title: job.title,
-              link: job.link,
-              hostSite: job.hostSite,
-              jobAlert: {
-                connect: {
-                  id: alert.id,
+        jobsAdded += jobs.length;
+        await page.close();
+
+        await this.prisma.$transaction(
+          jobs.map((job) => {
+            return this.prisma.jobs.create({
+              data: {
+                title: job.title,
+                link: job.link,
+                hostSite: job.hostSite,
+                jobAlert: {
+                  connect: {
+                    id: alert.id,
+                  },
                 },
               },
-            },
-          });
-        }),
-      );
+            });
+          }),
+        );
+
+        // Check if there are more results
+        hasMoreResults = titles.length > 0;
+        start += 10; // Google search results pagination
+      }
     }
-    // this.schedulerRegistry
-    //   .getCronJob('Job Alerts')
-    //   .setTime(new CronTime(CronExpression.EVERY_DAY_AT_2AM));
 
     this.logger.verbose(
       `TIME TO SCRAPE: ${new Date().getTime() - date.getTime()}ms`,
@@ -136,5 +142,7 @@ export class ScrapeService {
     this.logger.verbose(
       `JOBS ADDED: ${jobsAdded}, Before: ${before}, After: ${after}`,
     );
+
+    await browser.close();
   }
 }
