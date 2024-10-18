@@ -180,7 +180,7 @@ export class AuthService {
   signToken(user: Omit<CurrentUser, 'id'> & { sub: string }) {
     return this.jwt.signAsync(user, {
       secret: this.config.get('JWT_SECRET'),
-      expiresIn: '2h',
+      expiresIn: '4h',
     });
   }
 
