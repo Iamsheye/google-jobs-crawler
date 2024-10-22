@@ -21,6 +21,7 @@ model Users {
   hashedPassword String?
   googleId       String? @unique
   name           String
+  isVerified     Boolean @default(false)
   isLoginAllowed Boolean @default(true)
 
   jobAlerts    JobAlerts[]

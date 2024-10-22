@@ -144,6 +144,7 @@ export class AuthService {
           email,
           name,
           googleId,
+          isVerified: true,
         },
       });
     }
