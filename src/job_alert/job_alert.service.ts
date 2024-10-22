@@ -39,6 +39,31 @@ export class JobAlertService {
     return jobAlerts;
   }
 
+  async getSingleJobAlert(userId: string, alertId: string) {
+    const jobAlert = await this.prisma.jobAlerts.findFirst({
+      where: {
+        id: alertId,
+        userId,
+      },
+      include: {
+        jobs: {
+          take: 3,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!jobAlert || jobAlert.userId !== userId) {
+      throw new NotFoundException(
+        `Unable to access job alert with id ${alertId}`,
+      );
+    }
+
+    return jobAlert;
+  }
+
   async createJobAlert(user: CurrentUser, dto: CreateJobAlertDto) {
     try {
       const jobAlertsCount = await this.prisma.jobAlerts.count({

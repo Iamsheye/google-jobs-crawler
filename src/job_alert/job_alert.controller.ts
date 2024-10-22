@@ -35,6 +35,15 @@ export class JobAlertController {
     return this.jobAlertService.getJobAlerts(userId);
   }
 
+  @Get(':id')
+  @ResponseMessage(resMessage('GET', 'job alert'))
+  getSingleJobAlert(
+    @GetUser('id') userId: string,
+    @Param('id') alertId: string,
+  ) {
+    return this.jobAlertService.getSingleJobAlert(userId, alertId);
+  }
+
   @Post()
   @ResponseMessage(resMessage('POST', 'job alert'))
   createJobAlert(@GetUser() user: CurrentUser, @Body() dto: CreateJobAlertDto) {
