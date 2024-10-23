@@ -54,10 +54,11 @@ export class JobAlertController {
   @ResponseMessage(resMessage('GET', 'jobs'))
   getJobs(
     @Param('id') alertId: string,
+    @Query('search') search: string,
     @Query('page', ParseIntPipe) page: number,
     @Query('perPage', ParseIntPipe) perPage: number,
   ) {
-    return this.jobAlertService.getJobs({ alertId, page, perPage });
+    return this.jobAlertService.getJobs({ alertId, search, page, perPage });
   }
 
   @Patch(':id')
