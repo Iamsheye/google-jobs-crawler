@@ -110,6 +110,10 @@ export class JobAlertService {
     // get total number of jobs
     const totalJobs = await this.prisma.jobs.count({
       where: {
+        title: {
+          contains: search,
+          mode: 'insensitive',
+        },
         jobAlertId: alertId,
       },
     });
