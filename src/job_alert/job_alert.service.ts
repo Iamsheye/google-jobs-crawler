@@ -10,6 +10,7 @@ import { CreateJobAlertDto, EditJobAlertDto } from './dto';
 
 type GetJobsArgs = {
   alertId: string;
+  search?: string;
   page: number;
   perPage: number;
 };
@@ -105,15 +106,13 @@ export class JobAlertService {
     }
   }
 
-  async getJobs({ alertId, page, perPage }: GetJobsArgs) {
+  async getJobs({ alertId, page, perPage, search }: GetJobsArgs) {
     // get total number of jobs
     const totalJobs = await this.prisma.jobs.count({
       where: {
         jobAlertId: alertId,
       },
     });
-
-    console.log(totalJobs);
 
     if (totalJobs === 0) {
       return {
@@ -129,6 +128,10 @@ export class JobAlertService {
 
     const jobs = await this.prisma.jobs.findMany({
       where: {
+        title: {
+          contains: search,
+          mode: 'insensitive',
+        },
         jobAlertId: alertId,
       },
       orderBy: {
