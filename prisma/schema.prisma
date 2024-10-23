@@ -55,7 +55,7 @@ model JobAlerts {
 
   jobs Jobs[]
 
-  user   Users  @relation(fields: [userId], references: [id])
+  user   Users  @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
   @@map("job_alerts")
