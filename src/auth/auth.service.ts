@@ -28,6 +28,27 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
+  async verifyEmail(id: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('Invalid verification link');
+    }
+
+    if (user.isVerified) {
+      throw new ForbiddenException('Email is already verified');
+    }
+
+    await this.prisma.users.update({
+      where: { id },
+      data: { isVerified: true },
+    });
+
+    return { message: 'Email has been verified successfully' };
+  }
+
   async forgotPassword(email: string) {
     const user = await this.prisma.users.findUnique({
       where: { email },

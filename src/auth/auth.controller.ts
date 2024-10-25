@@ -48,4 +48,10 @@ export class AuthController {
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.password);
   }
+
+  @Post('verify-email')
+  @ResponseMessage('Email verified successfully')
+  verifyEmail(@Body('id') id: string) {
+    return this.authService.verifyEmail(id);
+  }
 }
