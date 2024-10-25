@@ -28,7 +28,6 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  // TODO: Implement forgot password mailer
   async forgotPassword(email: string) {
     const user = await this.prisma.users.findUnique({
       where: { email },
@@ -50,6 +49,8 @@ export class AuthService {
         resetTokenExpiry,
       },
     });
+
+    // TODO: Implement forgot password mailer
 
     // const resetUrl = `${this.config.get(
     //   'FRONTEND_URL',
@@ -107,6 +108,8 @@ export class AuthService {
           hashedPassword,
         },
       });
+
+      // TODO: Implement verification email mailer
 
       return;
     } catch (e) {

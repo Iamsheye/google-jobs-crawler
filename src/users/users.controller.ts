@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -38,6 +39,12 @@ export class UsersController {
   // ) {
   //   return this.userService.updateMyProfile(id, updateUserDto);
   // }
+
+  @Post('send-verification-email')
+  @ResponseMessage(resMessage('POST', 'send verification email'))
+  sendVerificationEmail(@GetUser('id') id: string) {
+    return this.userService.sendVerificationEmail(id);
+  }
 
   @Patch('password')
   @ResponseMessage(resMessage('PATCH', 'password'))

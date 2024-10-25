@@ -13,6 +13,26 @@ import { EditUserDto, UpdatePremiumDto, UpdatePwdDto } from './dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  async sendVerificationEmail(id: string) {
+    const user = await this.prisma.users.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isVerified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    // TODO: Implement verification email mailer
+
+    return;
+  }
+
   async updateMyProfile(id: string, updateUserDto: EditUserDto) {
     const newUser = await this.prisma.users.update({
       where: { id },
