@@ -12,6 +12,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { JwtService } from '@nestjs/jwt';
 import { CurrentUser } from 'src/types/user';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { v4 as uuidv4 } from 'uuid';
 
 const oAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -26,6 +27,74 @@ export class AuthService {
     private config: ConfigService,
     private jwt: JwtService,
   ) {}
+
+  // TODO: Implement forgot password mailer
+  async forgotPassword(email: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return {
+        message: 'If the email exists, a password reset link has been sent.',
+      };
+    }
+
+    const resetToken = uuidv4();
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    await this.prisma.users.update({
+      where: { id: user.id },
+      data: {
+        resetToken,
+        resetTokenExpiry,
+      },
+    });
+
+    // const resetUrl = `${this.config.get(
+    //   'FRONTEND_URL',
+    // )}/reset-password?resetToken=${resetToken}`;
+
+    // await this.mailerService.sendMail({
+    //   to: user.email,
+    //   subject: 'Password Reset Request',
+    //   template: 'forgot-password', // Create this template
+    //   context: {
+    //     name: user.name,
+    //     resetUrl,
+    //   },
+    // });
+
+    return {
+      message: 'If the email exists, a password reset link has been sent.',
+    };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.prisma.users.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('Invalid or expired reset token');
+    }
+
+    const hashedPassword = await argon.hash(newPassword);
+
+    await this.prisma.users.update({
+      where: { id: user.id },
+      data: {
+        hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    return { message: 'Password has been reset successfully' };
+  }
 
   async signup(dto: SignUpDto) {
     const hashedPassword = await argon.hash(dto.password);

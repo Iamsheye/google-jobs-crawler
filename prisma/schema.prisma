@@ -17,12 +17,14 @@ model Users {
   updatedAt DateTime @updatedAt
   isPremium Boolean  @default(false)
 
-  email          String  @unique
-  hashedPassword String?
-  googleId       String? @unique
-  name           String
-  isVerified     Boolean @default(false)
-  isLoginAllowed Boolean @default(true)
+  email            String    @unique
+  hashedPassword   String?
+  googleId         String?   @unique
+  name             String
+  isVerified       Boolean   @default(false)
+  isLoginAllowed   Boolean   @default(true)
+  resetToken       String?
+  resetTokenExpiry DateTime?
 
   jobAlerts    JobAlerts[]
   RefreshToken RefreshToken[]

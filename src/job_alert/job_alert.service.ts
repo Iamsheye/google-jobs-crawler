@@ -67,6 +67,23 @@ export class JobAlertService {
 
   async createJobAlert(user: CurrentUser, dto: CreateJobAlertDto) {
     try {
+      const userObj = await this.prisma.users.findFirst({
+        where: {
+          id: user.id,
+          isVerified: true,
+        },
+      });
+
+      if (!userObj) {
+        throw new NotFoundException(`User with id ${user.id} does not exist`);
+      }
+
+      if (!userObj.isVerified) {
+        throw new ForbiddenException(
+          `Please verify your account to create job alerts`,
+        );
+      }
+
       const jobAlertsCount = await this.prisma.jobAlerts.count({
         where: {
           userId: user.id,

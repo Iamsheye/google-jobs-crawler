@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { GoogleDto, RefreshTokenDto, SignInDto, SignUpDto } from './dto';
 import { ResponseMessage } from 'src/app.decorator';
 import { TransformationInterceptor } from 'src/app.interceptor';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -33,5 +35,17 @@ export class AuthController {
   @ResponseMessage('Logged in successfully')
   googleLogin(@Body() dto: GoogleDto) {
     return this.authService.googleLogin(dto);
+  }
+
+  @Post('forgot-password')
+  @ResponseMessage('Password reset link sent successfully')
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @ResponseMessage('Password reset successfully')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
   }
 }
