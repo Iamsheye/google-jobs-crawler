@@ -8,18 +8,13 @@ import {
 import * as argon from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EditUserDto, UpdatePremiumDto, UpdatePwdDto } from './dto';
+import { CurrentUser } from 'src/types/user';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async sendVerificationEmail(id: string) {
-    const user = await this.prisma.users.findUnique({
-      where: {
-        id,
-      },
-    });
-
+  async sendVerificationEmail(user: CurrentUser) {
     if (!user) {
       throw new NotFoundException('User not found');
     }

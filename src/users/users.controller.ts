@@ -45,8 +45,8 @@ export class UsersController {
 
   @Post('send-verification-email')
   @ResponseMessage(resMessage('POST', 'send verification email'))
-  sendVerificationEmail(@GetUser('id') id: string) {
-    return this.userService.sendVerificationEmail(id);
+  sendVerificationEmail(@GetUser() user: CurrentUser) {
+    return this.userService.sendVerificationEmail(user);
   }
 
   @Patch('password')
