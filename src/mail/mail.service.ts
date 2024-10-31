@@ -14,11 +14,9 @@ export class MailService {
         to: email,
         subject: 'Welcome to Scrapper🫡',
         html: `
-        <h3>Please verify your email</h3>
-        <p>Click the link below to verify your email address:</p>
+        <p>Click the link below to verify your Scrapper email address</p>
         <a href="${verificationLink}">Verify Email</a>
         <p>If you didn't request this, please ignore this email.</p>
-        <p>This link will expire in 24 hours.</p>
         `,
       });
     } catch (err) {
@@ -34,8 +32,7 @@ export class MailService {
         to: email,
         subject: 'Password Reset Request',
         html: `
-        <h3>Password Reset Request</h3>
-        <p>You requested to reset your password. Click the link below to create a new password:</p>
+        <p>You requested to reset your Scrapper password. Click the link below to create a new password:</p>
         <a href="${resetLink}">Reset Password</a>
         <p>If you didn't request this, please ignore this email.</p>
         <p>This link will expire in 1 hour.</p>
