@@ -13,6 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CurrentUser } from 'src/types/user';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { v4 as uuidv4 } from 'uuid';
+import { MailService } from 'src/mail/mail.service';
 
 const oAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -26,6 +27,7 @@ export class AuthService {
     private prisma: PrismaService,
     private config: ConfigService,
     private jwt: JwtService,
+    private mail: MailService,
   ) {}
 
   async verifyEmail(id: string) {
@@ -71,21 +73,7 @@ export class AuthService {
       },
     });
 
-    // TODO: Implement forgot password mailer
-
-    // const resetUrl = `${this.config.get(
-    //   'FRONTEND_URL',
-    // )}/reset-password?resetToken=${resetToken}`;
-
-    // await this.mailerService.sendMail({
-    //   to: user.email,
-    //   subject: 'Password Reset Request',
-    //   template: 'forgot-password', // Create this template
-    //   context: {
-    //     name: user.name,
-    //     resetUrl,
-    //   },
-    // });
+    await this.mail.sendPasswordResetEmail(user.email, resetToken);
 
     return {
       message: 'If the email exists, a password reset link has been sent.',
@@ -122,7 +110,7 @@ export class AuthService {
     const hashedPassword = await argon.hash(dto.password);
 
     try {
-      await this.prisma.users.create({
+      const user = await this.prisma.users.create({
         data: {
           email: dto.email,
           name: dto.name,
@@ -130,7 +118,7 @@ export class AuthService {
         },
       });
 
-      // TODO: Implement verification email mailer
+      await this.mail.sendVerificationEmail(user.email, user.id);
 
       return;
     } catch (e) {

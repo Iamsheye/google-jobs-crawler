@@ -9,10 +9,14 @@ import * as argon from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EditUserDto, UpdatePremiumDto, UpdatePwdDto } from './dto';
 import { CurrentUser } from 'src/types/user';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mail: MailService,
+  ) {}
 
   async sendVerificationEmail(user: CurrentUser) {
     if (!user) {
@@ -23,7 +27,7 @@ export class UsersService {
       throw new BadRequestException('Email is already verified');
     }
 
-    // TODO: Implement verification email mailer
+    await this.mail.sendVerificationEmail(user.email, user.id);
 
     return;
   }
