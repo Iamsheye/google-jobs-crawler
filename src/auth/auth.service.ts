@@ -314,23 +314,43 @@ export class AuthService {
   }
 
   async generateRefreshToken(userId: string): Promise<string> {
-    const refreshToken = await this.jwt.signAsync(
-      { sub: userId },
-      {
-        secret: this.config.get('JWT_REFRESH_SECRET'),
-        expiresIn: '7d',
-      },
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        const refreshToken = await this.jwt.signAsync(
+          { sub: userId },
+          {
+            secret: this.config.get('JWT_REFRESH_SECRET'),
+            expiresIn: '7d',
+          },
+        );
+
+        await this.prisma.refreshToken.create({
+          data: {
+            userId,
+            token: refreshToken,
+            expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+          },
+        });
+
+        return refreshToken;
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          attempts++;
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error(
+      'Failed to generate unique refresh token after multiple attempts',
     );
-
-    await this.prisma.refreshToken.create({
-      data: {
-        userId,
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-      },
-    });
-
-    return refreshToken;
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
