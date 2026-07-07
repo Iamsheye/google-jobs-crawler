@@ -33,6 +33,8 @@ Create a `.env` file in the root directory of the project and add the following 
 
 ## Running Locally
 
+For a fuller setup walkthrough, see [LOCAL_SETUP.md](./LOCAL_SETUP.md).
+
 To run this project locally, follow these steps:
 
 1. Clone the repository:
