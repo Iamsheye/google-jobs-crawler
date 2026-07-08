@@ -40,7 +40,10 @@ export class MailService {
         `,
       });
     } catch (err) {
-      this.logger.error(`Error sending verification email to ${email}`, err);
+      this.logger.error(
+        `Error sending verification email to ${email}, link: ${verificationLink}`,
+        err,
+      );
     }
   }
 
