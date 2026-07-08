@@ -21,3 +21,18 @@ export const environmentSchema = z.object({
 });
 
 export type EnvironmentVariables = z.infer<typeof environmentSchema>;
+
+export const validationSchema = {
+  validate(config: unknown): { error?: Error; value: unknown } {
+    const result = environmentSchema.safeParse(config);
+
+    if (!result.success) {
+      const message = result.error.issues
+        .map((e) => `${e.path.join('.')}: ${e.message}`)
+        .join(', ');
+      return { error: new Error(message), value: config };
+    }
+
+    return { error: undefined, value: result.data };
+  },
+};
