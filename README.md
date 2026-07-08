@@ -30,6 +30,15 @@ Create a `.env` file in the root directory of the project and add the following 
 - PORT
 - GOOGLE_CLIENT_ID
 - GOOGLE_SECRET
+- NODE_ENV
+- ALLOWED_ORIGINS
+- ENABLE_SWAGGER
+
+### Security-related variables
+
+- `NODE_ENV`: Set to `production` to enable production hardening (e.g., restricted CORS, disabled Swagger).
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins in production. When unset and not in production, all origins are allowed for local development.
+- `ENABLE_SWAGGER`: Set to `true` to enable Swagger UI even when `NODE_ENV=production`. Swagger is enabled by default in non-production environments.
 
 ## Running Locally
 
@@ -65,7 +74,7 @@ The API should now be running on port 3333 or the port specified in your .env fi
 
 ## API Documentation
 
-The full API documentation is available via Swagger UI at:
+Swagger UI is available at `/api` by default in non-production environments. In production (`NODE_ENV=production`) it is disabled unless `ENABLE_SWAGGER=true` is set. The previously hosted docs are available here for reference:
 
 [https://google-crawler-jobs-d05ea644aa3f.herokuapp.com/api](https://google-crawler-jobs-d05ea644aa3f.herokuapp.com/api)
 

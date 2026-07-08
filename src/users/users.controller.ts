@@ -28,10 +28,7 @@ export class UsersController {
   @Get('me')
   @ResponseMessage(resMessage('GET', 'user'))
   findMe(@GetUser() user: CurrentUser) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { isLoginAllowed, resetToken, resetTokenExpiry, ...rest } = user;
-
-    return rest;
+    return user;
   }
 
   // @Patch('me')

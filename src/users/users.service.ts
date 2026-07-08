@@ -10,6 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { EditUserDto, UpdatePremiumDto, UpdatePwdDto } from './dto';
 import { CurrentUser } from 'src/types/user';
 import { MailService } from 'src/mail/mail.service';
+import { newVerificationToken } from 'src/auth/token.util';
 
 @Injectable()
 export class UsersService {
@@ -27,7 +28,17 @@ export class UsersService {
       throw new BadRequestException('Email is already verified');
     }
 
-    await this.mail.sendVerificationEmail(user.email, user.id);
+    const { rawToken, hashedToken, expiresAt } = newVerificationToken();
+
+    await this.prisma.users.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: hashedToken,
+        emailVerificationTokenExpiry: expiresAt,
+      },
+    });
+
+    await this.mail.sendVerificationEmail(user.email, rawToken);
 
     return;
   }

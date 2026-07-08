@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -19,7 +18,7 @@ import { ResponseMessage } from 'src/app.decorator';
 import { resMessage } from 'src/app.constants';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { CurrentUser } from 'src/types/user';
-import { CreateJobAlertDto, EditJobAlertDto } from './dto';
+import { CreateJobAlertDto, EditJobAlertDto, PaginationDto } from './dto';
 
 @ApiBearerAuth()
 @ApiTags('Job Alerts')
@@ -53,12 +52,18 @@ export class JobAlertController {
   @Get(':id/jobs')
   @ResponseMessage(resMessage('GET', 'jobs'))
   getJobs(
+    @GetUser('id') userId: string,
     @Param('id') alertId: string,
     @Query('search') search: string,
-    @Query('page', ParseIntPipe) page: number,
-    @Query('perPage', ParseIntPipe) perPage: number,
+    @Query() pagination: PaginationDto,
   ) {
-    return this.jobAlertService.getJobs({ alertId, search, page, perPage });
+    return this.jobAlertService.getJobs({
+      userId,
+      alertId,
+      search,
+      page: pagination.page,
+      perPage: pagination.perPage,
+    });
   }
 
   @Patch(':id')

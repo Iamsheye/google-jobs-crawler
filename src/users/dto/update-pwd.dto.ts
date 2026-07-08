@@ -1,13 +1,21 @@
-import { IsNotEmpty, IsString, MinLength, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class UpdatePwdDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
+  @MaxLength(128)
   newPassword: string;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
-  oldPassword: string;
+  @MinLength(8)
+  @MaxLength(128)
+  oldPassword?: string;
 }

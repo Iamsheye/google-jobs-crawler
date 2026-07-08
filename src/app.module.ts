@@ -8,11 +8,13 @@ import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { JobAlertModule } from './job_alert/job_alert.module';
 import { MailModule } from './mail/mail.module';
+import { environmentSchema } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: environmentSchema,
     }),
     ScheduleModule.forRoot(),
     ScrapeModule,

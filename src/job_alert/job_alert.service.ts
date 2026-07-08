@@ -9,6 +9,7 @@ import { CurrentUser } from 'src/types/user';
 import { CreateJobAlertDto, EditJobAlertDto } from './dto';
 
 type GetJobsArgs = {
+  userId: string;
   alertId: string;
   search?: string;
   page: number;
@@ -112,7 +113,7 @@ export class JobAlertService {
     }
   }
 
-  async getJobs({ alertId, page, perPage, search }: GetJobsArgs) {
+  async getJobs({ userId, alertId, page, perPage, search }: GetJobsArgs) {
     // get total number of jobs
     const totalJobs = await this.prisma.jobs.count({
       where: {
@@ -121,6 +122,11 @@ export class JobAlertService {
           mode: 'insensitive',
         },
         jobAlertId: alertId,
+        jobAlert: {
+          is: {
+            userId,
+          },
+        },
       },
     });
 
@@ -143,6 +149,11 @@ export class JobAlertService {
           mode: 'insensitive',
         },
         jobAlertId: alertId,
+        jobAlert: {
+          is: {
+            userId,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',

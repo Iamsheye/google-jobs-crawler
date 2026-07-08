@@ -4,14 +4,10 @@ type CurrentUser = {
   email: string;
   name: string;
 
-  googleId?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  googleId?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
   isVerified?: boolean;
-
-  isLoginAllowed?: boolean;
-  resetToken?: string | null;
-  resetTokenExpiry?: string | null;
 };
 
 export type { CurrentUser };

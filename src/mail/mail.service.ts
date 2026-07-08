@@ -1,13 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class MailService {
-  constructor(private mailer: MailerService) {}
   private readonly logger = new Logger('EMAIL');
 
-  async sendVerificationEmail(email: string, id: string) {
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?id=${id}`;
+  constructor(
+    private mailer: MailerService,
+    private config: ConfigService,
+  ) {}
+
+  async sendVerificationEmail(email: string, token: string) {
+    const frontendUrl = this.config.getOrThrow('FRONTEND_URL');
+    const verificationLink = `${frontendUrl}/verify-email?token=${token}`;
 
     try {
       await this.mailer.sendMail({
@@ -26,6 +32,8 @@ export class MailService {
         <a href="${verificationLink}">Verify Email</a>
         </p>
 
+        <p>This link will expire in 24 hours and can only be used once.</p>
+
         <p style="margin:0;">Love,</p>
         <p style="margin:0;">The Scrapper Team.</p>
         </div>
@@ -37,7 +45,8 @@ export class MailService {
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string) {
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?resetToken=${resetToken}`;
+    const frontendUrl = this.config.getOrThrow('FRONTEND_URL');
+    const resetLink = `${frontendUrl}/reset-password?resetToken=${resetToken}`;
 
     try {
       await this.mailer.sendMail({

@@ -17,18 +17,22 @@ model Users {
   updatedAt DateTime @updatedAt
   isPremium Boolean  @default(false)
 
-  email            String    @unique
-  hashedPassword   String?
-  googleId         String?   @unique
-  name             String
-  isVerified       Boolean   @default(false)
-  isLoginAllowed   Boolean   @default(true)
-  resetToken       String?
-  resetTokenExpiry DateTime?
+  email                        String    @unique
+  hashedPassword               String?
+  googleId                     String?   @unique
+  name                         String
+  isVerified                   Boolean   @default(false)
+  isLoginAllowed               Boolean   @default(true)
+  resetToken                   String?
+  resetTokenExpiry             DateTime?
+  emailVerificationToken       String?
+  emailVerificationTokenExpiry DateTime?
 
   jobAlerts    JobAlerts[]
   RefreshToken RefreshToken[]
 
+  @@index([resetToken])
+  @@index([emailVerificationToken])
   @@map("users")
 }
 
@@ -41,6 +45,8 @@ model RefreshToken {
   userId    String
   user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([expiresAt, isValid])
   @@map("refresh_tokens")
 }
 
@@ -60,6 +66,8 @@ model JobAlerts {
   user   Users  @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
+  @@index([userId])
+  @@index([userId, createdAt])
   @@map("job_alerts")
 }
 
@@ -75,5 +83,7 @@ model Jobs {
   jobAlertId String
   jobAlert   JobAlerts? @relation(fields: [jobAlertId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
+  @@unique([jobAlertId, link])
+  @@index([jobAlertId, createdAt])
   @@map("jobs")
 }

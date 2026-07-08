@@ -51,7 +51,7 @@ export class AuthController {
 
   @Post('verify-email')
   @ResponseMessage('Email verified successfully')
-  verifyEmail(@Body('id') id: string) {
-    return this.authService.verifyEmail(id);
+  verifyEmail(@Body('token') token: string) {
+    return this.authService.verifyEmail(token);
   }
 }
