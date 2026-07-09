@@ -8,6 +8,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { JobAlertModule } from './job_alert/job_alert.module';
 import { MailModule } from './mail/mail.module';
+import { HealthModule } from './health/health.module';
 import { validationSchema } from './config/env.validation';
 
 @Module({
@@ -23,6 +24,7 @@ import { validationSchema } from './config/env.validation';
     PrismaModule,
     JobAlertModule,
     MailModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [PrismaService],

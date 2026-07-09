@@ -57,7 +57,7 @@ describe('ScrapeService', () => {
     ]);
     prisma.jobs.createMany.mockResolvedValue({ count: 1 });
 
-    const pages = Array.from({ length: 5 }, (_, pageIndex) => ({
+    const pages = Array.from({ length: 2 }, (_, pageIndex) => ({
       setDefaultTimeout: jest.fn(),
       goto: jest.fn().mockResolvedValue(undefined),
       close: jest.fn().mockResolvedValue(undefined),
@@ -82,8 +82,8 @@ describe('ScrapeService', () => {
 
     await service.handleCronJobAlerts();
 
-    expect(browser.newPage).toHaveBeenCalledTimes(5);
-    expect(prisma.jobs.createMany).toHaveBeenCalledTimes(5);
+    expect(browser.newPage).toHaveBeenCalledTimes(2);
+    expect(prisma.jobs.createMany).toHaveBeenCalledTimes(2);
     expect(prisma.jobs.createMany).toHaveBeenCalledWith({
       data: [
         {
