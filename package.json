@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "heroku-cleanup": "yarn run playwright install chromium",
+    "postinstall": "yarn run playwright install chromium",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",

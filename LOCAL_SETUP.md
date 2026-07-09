@@ -88,13 +88,15 @@ yarn prisma generate
 
 ## 5. Install Playwright Chromium
 
-The scraper launches Chromium through `playwright-chromium`. Install the browser binary locally:
+The scraper launches Chromium through `playwright-chromium`. A `postinstall` script in `package.json` automatically installs the browser binary after every `yarn install`, so in most cases you do not need to run anything manually.
+
+If you need to reinstall or verify it later, run:
 
 ```sh
 yarn run playwright install chromium
 ```
 
-This is especially important before running scrape jobs or any code path that launches the browser.
+If you want to skip the automatic download (for example in CI), set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` before running `yarn install`.
 
 ## 6. Start The API
 
@@ -114,6 +116,56 @@ Swagger documentation is available at:
 
 ```text
 http://localhost:3333/api
+```
+
+## Docker Alternative
+
+If you prefer not to install PostgreSQL and Node.js locally, you can run the API and database together using Docker Compose.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Steps
+
+1. Create a `.env` file in the project root with the required variables (see step 3 above). You only need the non-database values; Docker Compose provides the database credentials automatically.
+
+2. Build and start the containers:
+
+   ```sh
+   docker compose up --build
+   ```
+
+   This starts two services:
+
+   - `db`: PostgreSQL 16 (Alpine) with a persistent volume and a health check.
+   - `app`: The NestJS application, built from the multi-stage `Dockerfile`. It waits for the database to become healthy, runs `prisma migrate deploy`, and already includes a Chromium installation for the Playwright scraper.
+
+3. The API is available at:
+
+   ```text
+   http://localhost:3333
+   ```
+
+4. Stop the containers:
+
+   ```sh
+   docker compose down
+   ```
+
+   To remove the database volume as well:
+
+   ```sh
+   docker compose down -v
+   ```
+
+### Useful Docker Commands
+
+```sh
+docker compose logs -f app   # Tail the application logs
+docker compose ps            # List running services
+docker compose exec db psql -U postgres -d google_jobs_crawler  # Open a database shell
 ```
 
 ## Useful Commands

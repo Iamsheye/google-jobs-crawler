@@ -71,6 +71,68 @@ To run this project locally, follow these steps:
 
 The API should now be running on port 3333 or the port specified in your .env file.
 
+## Running with Docker
+
+The project includes a multi-stage `Dockerfile` and a `docker-compose.yml` for local containerized development and deployment. Docker Compose orchestrates the NestJS application and a PostgreSQL database.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Quick start
+
+1. Create a `.env` file in the project root and configure the required variables (see [Environment Variables](#environment-variables)). At minimum, set:
+
+   - `JWT_SECRET`
+   - `JWT_REFRESH_SECRET`
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_SECRET`
+   - `SMTP_USER`
+   - `SMTP_PASSWORD`
+   - `FRONTEND_URL`
+
+   Database credentials default to `postgres`/`postgres` with a database named `google_jobs_crawler`, but you can override them via `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`.
+
+2. Build and start the containers:
+
+   ```bash
+   docker compose up --build
+   ```
+
+3. Once the containers are healthy, the API is available at:
+
+   ```
+   http://localhost:3333
+   ```
+
+4. Stop the containers:
+
+   ```bash
+   docker compose down
+   ```
+
+   To remove the database volume as well, run:
+
+   ```bash
+   docker compose down -v
+   ```
+
+### Services
+
+- `db`: PostgreSQL 16 (Alpine) with a persistent volume and a health check.
+- `app`: The NestJS application built from the `Dockerfile`. It waits for the database to become healthy before starting and automatically runs Prisma migrations via `scripts/start-production.sh`.
+
+### Dockerfile overview
+
+The Dockerfile uses a two-stage build based on Debian (`node:22-bookworm-slim`):
+
+1. **Builder stage**: installs dependencies, generates the Prisma client, and builds the NestJS application. Browser downloads are skipped here to keep the build layer lean.
+2. **Runtime stage**: copies the built artifacts, Prisma schema, and a startup script that runs `prisma migrate deploy` before starting the application. It also installs Chromium and the Playwright system dependencies so the daily scraper works out of the box.
+
+### Health check
+
+A health check endpoint is exposed at `/health` and verifies connectivity to the database via Prisma.
 
 ## API Documentation
 
